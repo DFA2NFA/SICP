@@ -16,32 +16,35 @@
 (provide force)
 (define (force arg)
   (disln "force")
-  (let ((result (if (procedure? arg) (arg) arg)))
-    (if (procedure? result) (force result) result)))
+  (let ((result (if (procedure? arg)
+                    (arg)
+                    arg)))
+    (if (procedure? result)
+        (force result)
+        result)))
 
 (provide delay)
 (define (delay proc)
   (lambda () proc))
 
+
+(provide stream-op)
+(define (stream-op stream op)
+(let ((force_stream (force stream)))
+    (if (not (pair? force_stream))
+        force_stream
+        (let ((result (op force_stream) ))
+          (dis "stream-op: ")
+          (disln result)
+        (force result)))))
+
 (provide stream-car)
 (define (stream-car stream)
-  (let ((tmp (force stream)))
-    (if (not (pair? tmp))
-        tmp
-        (let (( x (car (if (procedure? tmp) (force tmp) tmp))))
-          (dis "stream-car: ")
-          (disln x)
-        (force x)))))
+  (stream-op stream car))
 
 (provide stream-cdr)
 (define (stream-cdr stream)
-  (let ((tmp (force stream)))
-    (if (not (pair? tmp))
-        tmp
-        (let (( x (cdr (if (procedure? tmp) (force tmp) tmp))))
-          (dis "stream-cdr: ")
-          (disln x)
-        (force x)))))
+  (stream-op stream cdr))
 
 (provide stream-map)
 (define (stream-map proc stream)
@@ -84,15 +87,15 @@
   (wrong-multi-stream-map plus (cons-stream s1 (cons-stream s2 '()))))
 
 (provide display-stream)
-(define (display-stream s)
-  (stream-for-each display-line s))
+(define (display-stream stream)
+  (stream-for-each display-line stream))
 
 (provide stream-for-each)
-(define (stream-for-each proc s)
-  (if (stream-null? s)
+(define (stream-for-each proc stream)
+  (if (stream-null? stream)
       'done
-      (begin (proc (stream-car s))
-             (stream-for-each proc (stream-cdr s)))))
+      (begin (proc (stream-car stream))
+             (stream-for-each proc (stream-cdr stream)))))
 
 (provide display-line)
 (define (display-line x) (displayln x))
@@ -105,13 +108,13 @@
 
 (provide plus)
 (define (plus stream)
-  (define (iter stream number)
+  (define (iter stream sum)
     (if (stream-null? stream)
         (begin
           (dis "plus result: ")
-          (disln number)
-          number)
-        (iter (stream-cdr stream) (+ number (stream-car stream)))))
+          (disln sum)
+          sum)
+        (iter (stream-cdr stream) (+ sum (stream-car stream)))))
   (iter stream 0))
 
 (provide integers-starting-from)
