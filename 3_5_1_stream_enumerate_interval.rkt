@@ -1,6 +1,7 @@
 #lang racket
 (require "3_5_2_integers_by_add_streams.rkt")
 
+(provide stream-enumerate-interval)
 (define (stream-enumerate-interval low high)
   (dis "stream-enumerate-interval: low:") (dis low) (dis ", high: ") (disln high)
   (if (> low high)
