@@ -3,49 +3,30 @@
 (define n 0)
 
 (define bar
-  (lambda (bar)
-    bar))
+  (lambda (escape)
+    (begin (display "bar: escape = ") (displayln escape)
+    escape)))
 
 (define foo
   (lambda (escape)
-    (display n)
-    (newline)
+    (display n) (newline)
     (set! n (+ n 1))
-    escape))
+    (begin
+      (displayln (format "foo: escape = ~A" escape))
+      (set! k escape)
+      escape)))
 
+(define k #f)
+(displayln "(foo (call/cc bar))") (foo (call/cc bar)  )
+(displayln "(k k)") (k k)
+(displayln "(k k)") (k k)
+(displayln "(k k)") (k k)
+(displayln "(k k)") (k k)
 
 ;(foo (call/cc bar))
-;(call/cc bar) 's continuation is the (foo ...),
-;so it should equal to (foo (foo 'end))
-
-
-;((call/cc bar) (foo (call/cc bar)))
-;(call/cc bar) 's continuation is (foo (call/cc bar)),
-;so the full expresssion should be equal to
-;((foo (call/cc bar)) (foo (call/cc bar)))
-
-
-
-;(call-with-current-continuation proc)      procedure
-;(call/cc proc)                             procedure
-;
-;Proc should accept one argument.
-;The procedure call-with-current-continuation
-;(which is the same as the procedure call/cc)
-;packages the current continuation as an “escape procedure” and
-;passes it as an argument to proc.
-
-
-;((call/cc bar) (foo (call/cc bar)))
-
-;(call/cc bar) is equal with the below lambda?
-(define (ex-bar)
-  (call-with-current-continuation
-   (lambda (cc-bar)
-     cc-bar)))
-
-(define continuation
-  (+ 1 (call-with-current-continuation
-        (lambda (escape)
-          (+ 2 (escape 3))))))
-;=⇒ 4
+;(call/cc bar) 's continuation is the (foo ...) which can be named to be foo_continuation
+;the escape parameter of the bar lambda will be foo_continuation
+;bar lambda will return the foo_continuation
+;the returned continuation pass to the (foo ...), so the full expression should equal to (foo foo_continuation)
+;the escape parameter of the foo lambda parameter will be foo_continuation.
+;the full expression will execute it's body and return the escape which is the foo_continuation.
